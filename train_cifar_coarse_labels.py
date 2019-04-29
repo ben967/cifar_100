@@ -103,8 +103,8 @@ for i in range(numEpochs):
     if i%summaryIterations == 0:
         train_accuracy = accuracy.eval(session=sess, feed_dict={x:trainDataBatch, y_: trainLabelBatchCoarse, keep_prob: 1.0})
 
-        testDataBatchCoarse, testLabelBatchCoarse, testLabelBatchCoarse = cifarData.getTestBatch(250)
-        test_accuracy = accuracy.eval(session=sess, feed_dict={x:testDataBatchCoarse, y_: testLabelBatchCoarse, keep_prob: 1.0})
+        testDataBatch, testLabelBatchCoarse, testLabelBatchFine = cifarData.getTestBatch(250)
+        test_accuracy = accuracy.eval(session=sess, feed_dict={x:testDataBatch, y_: testLabelBatchCoarse, keep_prob: 1.0})
 
         print("Step: " + str(i) + ", Train accuracy: " + str(train_accuracy) + ", Test accuracy: " + str(test_accuracy))
     train_step.run(session=sess, feed_dict={x: trainDataBatch, y_: trainLabelBatchCoarse, keep_prob: keepProb})
@@ -113,5 +113,5 @@ print("test accuracy %g"%accuracy.eval(session=sess, feed_dict={
     x:testDataBatch, y_: testLabelBatchCoarse, keep_prob: 1.0}))
 
 # Save the variables to disk.
-save_path = saver.save(sess, + saveDir)
+save_path = saver.save(sess, saveDir)
 print("Model saved in file: %s" % save_path)
