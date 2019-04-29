@@ -5,7 +5,6 @@
 # Imports
 import numpy as np
 import datasetFunctions as data
-import cv2
 import tensorflow as tf
 import tensorflow.contrib.layers as lays
 import os
@@ -17,10 +16,10 @@ saveDir = 'models/cifar_coarse.ckpt'
 numClasses = 20
 imageSize = 32
 numChannels = 3
-numEpochs = 100
-summaryIterations = 10
+numEpochs = 50000
+summaryIterations = 1000
 learningRate = 0.001
-keepProb = 0.7
+keepProb = 0.8
 
 #################################################################################################################
 # Main code begins here
@@ -62,11 +61,11 @@ net_flat = tf.reshape(conv3, [-1, 4*4*32])
 print(net_flat.shape)
 
 # Fully connected layer 1
-net = lays.fully_connected(net_flat, num_outputs=256, activation_fn=tf.nn.tanh)
+net = lays.fully_connected(net_flat, num_outputs=512, activation_fn=tf.nn.tanh)
 print(net.shape)
 
 # Fully connected layer 2
-net = lays.fully_connected(net, num_outputs=128, activation_fn=tf.nn.tanh)
+net = lays.fully_connected(net, num_outputs=256, activation_fn=tf.nn.tanh)
 print(net.shape)
 
 # Apply dropout to reduce overfitting
@@ -74,7 +73,7 @@ keep_prob = tf.placeholder(tf.float32)
 h_fc1_drop = tf.nn.dropout(net, keep_prob)
 
 # Matmul layer
-W_fc2 = weight_variable([128, numClasses])
+W_fc2 = weight_variable([256, numClasses])
 b_fc2 = bias_variable([numClasses])
 matmulResult = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
 print(matmulResult.shape)
@@ -84,11 +83,7 @@ net = lays.softmax(matmulResult)
 print(net.shape)
 
 # Create session and initialise variables
-config = tf.ConfigProto(
-        device_count = {'GPU': 0}
-    )
-sess = tf.Session(config=config)
-#sess = tf.Session()
+sess = tf.Session()
 
 # Train and evaluate the model
 cross_entropy = tf.reduce_mean(-tf.reduce_sum(y_ * tf.log(net), reduction_indices=[1]))
@@ -108,8 +103,8 @@ for i in range(numEpochs):
     if i%summaryIterations == 0:
         train_accuracy = accuracy.eval(session=sess, feed_dict={x:trainDataBatch, y_: trainLabelBatchCoarse, keep_prob: 1.0})
 
-        testDataBatch, testLabelBatchCoarse, testLabelBatchFine = cifarData.getTestBatch(250)
-        test_accuracy = accuracy.eval(session=sess, feed_dict={x:testDataBatch, y_: testLabelBatchCoarse, keep_prob: 1.0})
+        testDataBatchCoarse, testLabelBatchCoarse, testLabelBatchCoarse = cifarData.getTestBatch(250)
+        test_accuracy = accuracy.eval(session=sess, feed_dict={x:testDataBatchCoarse, y_: testLabelBatchCoarse, keep_prob: 1.0})
 
         print("Step: " + str(i) + ", Train accuracy: " + str(train_accuracy) + ", Test accuracy: " + str(test_accuracy))
     train_step.run(session=sess, feed_dict={x: trainDataBatch, y_: trainLabelBatchCoarse, keep_prob: keepProb})
